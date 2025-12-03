@@ -12,7 +12,7 @@ class driver extends uvm_driver #(transaction)
     super.build_phase(phase);
     tc = transction::type_id::create("tc");
     
-    if(!uvm_config_db #(virtual m_if)::get(this,"","aif",aif))
+    if(!uvm_config_db #(virtual m_if)::get(this,"","mux_if",m_if))
       `uvm_error("DRV","UABLE TO GET ACCESS OF UVM_CONFIG_DB");
   endfunction
   
