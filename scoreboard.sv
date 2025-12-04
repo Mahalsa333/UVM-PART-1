@@ -1,48 +1,33 @@
-class scoreboard extends uvm_scoreboard;
+class scoreboard extends uvm_component;
   `uvm_component_utils(scoreboard)
-  
-  uvm_analysis_imp #(transaction,scoreboard) recv;
-  
-  transaction tr;
-  
-  function new(input string path="scoreboard",uvm_component parent = null);
-    super.new(path,parent);
-    recv=new("recv",this);
-  endfunction
-  
-  
-  virtual function void buils_phase(uvm_phase phase);
-    super.build_phase(phase);
-    tr=transaction::type_id::create("tr");
-    endfunction
-  
-  virtual function void write(input transaction t);
-    tr=t;
-    `uvm_info("sco",$sformatf("DATA RCVD FROM MONITOR in:%0d, sel:%0d, and y=%0d",tr.in,tr.sel,tr.y),UVM_NONE);
-    //golden algorithm
-    
-   function bit golden_mux(bit [3:0] in, bit [1:0] sel);
-    case(sel)
-      2'b00: return in[0];
-      2'b01: return in[1];
-      2'b10: return in[2];
-      2'b11: return in[3];
-      default: return 1'b0;
-    endcase
+
+  uvm_analysis_imp #(transaction, scoreboard) recv;
+
+  function new(string name = "scoreboard", uvm_component parent = null);
+    super.new(name, parent);
+    recv = new("recv", this);
   endfunction
 
-  // Write method called by monitor
-  function void write(mux_transaction tr);
+  // Called when monitor sends a transaction
+  function void write(transaction tr);
     bit expected;
-    expected = golden_mux(tr.in, tr.sel);
-    
-    
-      if (expected !== tr.y)
-      `uvm_error("MUX_SCB", $sformatf("Mismatch! sel=%b in=%b expected=%0b got=%0b",
-          tr.sel, tr.in, expected, tr.y))
-    else
-      `uvm_info("MUX_SCB", "MATCH!", UVM_LOW);
-  endfunction
 
+    case (tr.sel)
+      2'b00: expected = tr.in[0];
+      2'b01: expected = tr.in[1];
+      2'b10: expected = tr.in[2];
+      2'b11: expected = tr.in[3];
+      default: expected = 1'b0;
+    endcase
+
+    if (tr.y !== expected)
+      `uvm_error("SCO",
+                 $sformatf("Mismatch: in=%0b sel=%0b y=%0b exp=%0b",
+                           tr.in, tr.sel, tr.y, expected))
+    else
+      `uvm_info("SCO",
+                $sformatf("PASS: in=%0b sel=%0b y=%0b",
+                          tr.in, tr.sel, tr.y),
+                UVM_LOW)
+  endfunction
 endclass
-    
